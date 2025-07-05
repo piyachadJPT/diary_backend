@@ -1,0 +1,234 @@
+package controllers
+
+import (
+	"gofiber-auth/database"
+	"gofiber-auth/models"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func GetDiaryByDate(c *fiber.Ctx) error {
+	DiaryDate := c.Query("DiaryDate")
+	studentID := c.Query("StudentID")
+
+	if DiaryDate == "" || studentID == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "DiaryDate and StudentID are required",
+		})
+	}
+
+	var diaries []models.Diary
+
+	result := database.DB.
+		Preload("Student").
+		Where("diary_date = ? AND student_id = ?", DiaryDate, studentID).
+		Find(&diaries)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": result.Error.Error(),
+		})
+	}
+
+	if len(diaries) == 0 {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "No diary entries found for this date and student",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Diaries retrieved successfully",
+		"data":    diaries,
+	})
+}
+
+func CreateNewDiary(c *fiber.Ctx) error {
+	var diary models.Diary
+
+	if err := c.BodyParser(&diary); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Cannot parse JSON",
+			"details": err.Error(),
+		})
+	}
+
+	if diary.StudentID == 0 {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "StudentID is required",
+		})
+	}
+
+	if diary.ContentHTML == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "ContentHTML is required",
+		})
+	}
+
+	if diary.IsShared == "" {
+		diary.IsShared = "everyone"
+	}
+
+	if diary.Status == "" {
+		diary.Status = "neutral"
+	}
+
+	if diary.DiaryDate.IsZero() {
+		diary.DiaryDate = time.Now()
+	}
+
+	if err := database.DB.Create(&diary).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to create diary",
+			"details": err.Error(),
+		})
+	}
+
+	return c.Status(201).JSON(fiber.Map{
+		"message": "Created diary successfully",
+		"data":    diary,
+	})
+}
+
+func UpdateDiary(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var diary models.Diary
+
+	if result := database.DB.First(&diary, id); result.Error != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Diary not found",
+		})
+	}
+
+	var updateData models.Diary
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Cannot parse JSON",
+			"details": err.Error(),
+		})
+	}
+
+	diary.ContentHTML = updateData.ContentHTML
+	diary.ContentDelta = updateData.ContentDelta
+	diary.IsShared = updateData.IsShared
+	diary.AllowComment = updateData.AllowComment
+	diary.Status = updateData.Status
+
+	if err := database.DB.Save(&diary).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to update diary",
+			"details": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Updated diary successfully",
+		"data":    diary,
+	})
+}
+
+func PatchDiary(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var diary models.Diary
+
+	if result := database.DB.First(&diary, id); result.Error != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Diary not found",
+		})
+	}
+
+	var updateData map[string]interface{}
+	if err := c.BodyParser(&updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Cannot parse JSON",
+			"details": err.Error(),
+		})
+	}
+
+	if err := database.DB.Model(&diary).Updates(updateData).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to update diary",
+			"details": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Patched diary successfully",
+		"data":    diary,
+	})
+}
+
+func DeleteDiary(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var diary models.Diary
+
+	if result := database.DB.First(&diary, id); result.Error != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Diary not found",
+		})
+	}
+
+	if err := database.DB.Delete(&diary).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to delete diary",
+			"details": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Deleted diary successfully",
+	})
+}
+
+func GetDiariesByStudent(c *fiber.Ctx) error {
+	studentID := c.Params("studentId")
+	var diaries []models.Diary
+
+	if err := database.DB.Where("student_id = ?", studentID).
+		Order("diary_date desc").
+		Find(&diaries).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to retrieve diaries",
+			"details": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Diaries retrieved successfully",
+		"data":    diaries,
+		"count":   len(diaries),
+	})
+}
+
+func GetAllDiaries(c *fiber.Ctx) error {
+	var diaries []models.Diary
+
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 10)
+	offset := (page - 1) * limit
+
+	query := database.DB.Order("diary_date desc")
+
+	if studentID := c.Query("student_id"); studentID != "" {
+		query = query.Where("student_id = ?", studentID)
+	}
+
+	if isShared := c.Query("is_shared"); isShared != "" {
+		query = query.Where("is_shared = ?", isShared)
+	}
+
+	if err := query.Offset(offset).Limit(limit).Find(&diaries).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   "Failed to retrieve diaries",
+			"details": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Diaries retrieved successfully",
+		"data":    diaries,
+		"count":   len(diaries),
+		"page":    page,
+		"limit":   limit,
+	})
+}

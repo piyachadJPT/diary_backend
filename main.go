@@ -2,7 +2,8 @@ package main
 
 import (
 	"gofiber-auth/database"
-	"gofiber-auth/handlers"
+	"gofiber-auth/routers"
+
 	"log"
 	"os"
 
@@ -22,18 +23,18 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
+		AllowOrigins: os.Getenv("CORS_ALLOW_ORIGINS"),
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowHeaders: "Content-Type,Authorization",
 	}))
 
-	app.Post("/api/auth/microsoft", handlers.HandleMicrosoftLogin)
-	app.Get("/api/user/:id", handlers.GetUser)
-	app.Post("/api/user", handlers.CreateUser)
+	routers.UserRouter(app)
+	routers.AuthRouter(app)
+	routers.DiaryRouter(app)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "6001"
+		port = os.Getenv("SERVER_PORT")
 	}
 
 	log.Printf("Starting server at :%s\n", port)

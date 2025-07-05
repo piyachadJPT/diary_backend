@@ -34,7 +34,16 @@ func Connect() {
 }
 
 func autoMigrate() {
-	err := DB.AutoMigrate(&models.User{})
+	// DB.Migrator().DropTable(&models.Diary{})
+
+	err := DB.AutoMigrate(
+		&models.User{},
+		&models.StudentAdvisor{},
+		&models.Diary{},
+		&models.Comment{},
+		&models.Attachment{},
+	)
+
 	if err != nil {
 		log.Fatalf(" Auto migration failed: %v", err)
 	}
