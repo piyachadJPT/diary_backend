@@ -8,8 +8,9 @@ import (
 
 type User struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement"`
-	Name      string    `gorm:"size:255;not null"`
+	Name      *string   `gorm:"size:255"`
 	Email     string    `gorm:"size:255;unique;not null"`
+	Image     *string   `gorm:"type:longtext"`
 	Role      string    `gorm:"type:enum('student','advisor');not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
@@ -35,7 +36,8 @@ type Diary struct {
 	CreatedAt    time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime"`
 
-	Student User `gorm:"foreignKey:StudentID;constraint:OnDelete:CASCADE"`
+	Student     User         `gorm:"foreignKey:StudentID;constraint:OnDelete:CASCADE"`
+	Attachments []Attachment `gorm:"foreignKey:DiaryID"`
 }
 
 type Attachment struct {
@@ -46,7 +48,7 @@ type Attachment struct {
 	FileType  string    `gorm:"size:100"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 
-	Diary Diary `gorm:"foreignKey:DiaryID;constraint:OnDelete:CASCADE"`
+	Diary Diary `gorm:"-:all" json:"-"`
 }
 
 type Comment struct {

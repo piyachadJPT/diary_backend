@@ -13,5 +13,5 @@ func DiaryRouter(app *fiber.App) {
 	diaryRouter.Get("/api/diary/", controllers.GetDiaryByDate)
 	diaryRouter.Patch("/api/diary/:id", controllers.PatchDiary)
 	diaryRouter.Put("/api/diary/:id", controllers.UpdateDiary)
-	diaryRouter.Put("/api/diary/:id", controllers.DeleteDiary)
+	diaryRouter.Delete("/api/diary/:id", controllers.DeleteDiary)
 }

@@ -8,7 +8,9 @@ import (
 )
 
 type LoginData struct {
-	Email string `json:"email"`
+	Email string  `json:"email"`
+	Name  *string `json:"name"`
+	Image *string `json:"image"`
 }
 
 func HandleMicrosoftLogin(c *fiber.Ctx) error {
@@ -21,7 +23,7 @@ func HandleMicrosoftLogin(c *fiber.Ctx) error {
 
 	if data.Email == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Email and Name are required",
+			"error": "Email is required",
 		})
 	}
 
@@ -29,13 +31,26 @@ func HandleMicrosoftLogin(c *fiber.Ctx) error {
 	result := database.DB.Where("email = ?", data.Email).First(&user)
 
 	if result.Error != nil {
-		user = models.User{
-			Email: data.Email,
-		}
-		createErr := database.DB.Create(&user).Error
-		if createErr != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+
+	updated := false
+
+	if data.Name != nil {
+		user.Name = data.Name
+		updated = true
+	}
+	if data.Image != nil {
+		user.Image = data.Image
+		updated = true
+	}
+
+	if updated {
+		if err := database.DB.Save(&user).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to create user",
+				"error": "Failed to update user",
 			})
 		}
 	}

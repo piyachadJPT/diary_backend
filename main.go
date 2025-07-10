@@ -31,6 +31,8 @@ func main() {
 	routers.UserRouter(app)
 	routers.AuthRouter(app)
 	routers.DiaryRouter(app)
+	routers.AttachmentRouter(app)
+	routers.CommentRouter(app)
 
 	port := os.Getenv("PORT")
 	if port == "" {

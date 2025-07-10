@@ -22,6 +22,7 @@ func GetDiaryByDate(c *fiber.Ctx) error {
 
 	result := database.DB.
 		Preload("Student").
+		Preload("Attachments").
 		Where("diary_date = ? AND student_id = ?", DiaryDate, studentID).
 		Find(&diaries)
 
@@ -175,7 +176,8 @@ func DeleteDiary(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(200).JSON(fiber.Map{
+		"ok":      true,
 		"message": "Deleted diary successfully",
 	})
 }

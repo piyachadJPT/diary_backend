@@ -32,6 +32,18 @@ func GetUserByEmail(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+func GetAllUser(c *fiber.Ctx) error {
+	var user models.User
+
+	result := database.DB.Find(&user)
+	if result.Error != nil {
+		c.Status(404)
+		return c.SendString("User not found")
+	}
+
+	return c.JSON(user)
+}
+
 func CreateUser(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
