@@ -8,4 +8,5 @@ import (
 
 func AttachmentRouter(app *fiber.App) {
 	app.Post("/api/diary/uploadfile", controllers.UploadAttachment)
+	app.Delete("/api/diary/attachment/:id", controllers.DeleteAttachment)
 }
