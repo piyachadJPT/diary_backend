@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"gofiber-auth/database"
 	"gofiber-auth/models"
@@ -60,40 +61,15 @@ func UploadAttachment(c *fiber.Ctx) error {
 			contentType = file.Header["Content-Type"][0]
 		} else {
 			ext := strings.ToLower(filepath.Ext(file.Filename))
-			switch ext {
-			case ".jpg", ".jpeg":
-				contentType = "image/jpeg"
-			case ".png":
-				contentType = "image/png"
-			case ".gif":
-				contentType = "image/gif"
-			case ".webp":
-				contentType = "image/webp"
-			case ".mp4":
-				contentType = "video/mp4"
-			case ".webm":
-				contentType = "video/webm"
-			case ".mov":
-				contentType = "video/quicktime"
-			case ".mp3":
-				contentType = "audio/mp3"
-			case ".wav":
-				contentType = "audio/wav"
-			case ".pdf":
+			if ext == ".pdf" {
 				contentType = "application/pdf"
-			case ".doc":
-				contentType = "application/msword"
-			case ".docx":
-				contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-			case ".txt":
-				contentType = "text/plain"
-			case ".zip":
-				contentType = "application/zip"
-			case ".rar":
-				contentType = "application/x-rar-compressed"
-			default:
-				contentType = "application/octet-stream"
+			} else {
+				contentType = ""
 			}
+		}
+
+		if contentType != "application/pdf" {
+			return errors.New("only PDF files are allowed")
 		}
 
 		isAllowed := false
@@ -182,23 +158,33 @@ func DeleteAttachment(c *fiber.Ctx) error {
 	})
 }
 
-func GetAttachmentsByDiary(c *fiber.Ctx) error {
-	diaryID, err := strconv.Atoi(c.Params("diary_id"))
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "diary_id ไม่ถูกต้อง",
-		})
+func GetAttachmentsByDiaryId(c *fiber.Ctx) error {
+	idStr := c.Query("ID")
+	if idStr == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "id is required"})
 	}
 
+	id64, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
+	}
+	id := uint(id64)
+
 	var attachments []models.Attachment
-	if err := database.DB.Where("diary_id = ?", diaryID).Find(&attachments).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "ไม่สามารถดึงข้อมูลไฟล์แนบได้",
-		})
+	result := database.DB.
+		Where("ID = ?", id).
+		Find(&attachments)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+	}
+
+	if len(attachments) == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "No attachments found for this Diary ID"})
 	}
 
 	return c.JSON(fiber.Map{
+		"message":     "Attachments retrieved successfully",
 		"attachments": attachments,
-		"total":       len(attachments),
 	})
 }

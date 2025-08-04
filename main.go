@@ -19,8 +19,9 @@ func main() {
 	}
 
 	database.Connect()
-
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ReadBufferSize: 16384,
+	})
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: os.Getenv("CORS_ALLOW_ORIGINS"),
@@ -28,11 +29,19 @@ func main() {
 		AllowHeaders: "Content-Type,Authorization",
 	}))
 
+	app.Static("/api/files", "./upload/diary")
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Go Fiber Server is running!")
+	})
+
 	routers.UserRouter(app)
 	routers.AuthRouter(app)
 	routers.DiaryRouter(app)
 	routers.AttachmentRouter(app)
 	routers.CommentRouter(app)
+	routers.StudentRouter(app)
+	routers.StudentAdvisorRouter(app)
 
 	port := os.Getenv("PORT")
 	if port == "" {

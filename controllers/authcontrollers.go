@@ -29,7 +29,6 @@ func HandleMicrosoftLogin(c *fiber.Ctx) error {
 
 	var user models.User
 	result := database.DB.Where("email = ?", data.Email).First(&user)
-
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
@@ -38,11 +37,11 @@ func HandleMicrosoftLogin(c *fiber.Ctx) error {
 
 	updated := false
 
-	if data.Name != nil {
+	if data.Name != nil && (user.Name == nil || *user.Name != *data.Name) {
 		user.Name = data.Name
 		updated = true
 	}
-	if data.Image != nil {
+	if data.Image != nil && (user.Image == nil || *user.Image != *data.Image) {
 		user.Image = data.Image
 		updated = true
 	}

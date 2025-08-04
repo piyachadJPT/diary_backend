@@ -234,3 +234,37 @@ func GetAllDiaries(c *fiber.Ctx) error {
 		"limit":   limit,
 	})
 }
+
+func GetDiaryDateByStudentId(c *fiber.Ctx) error {
+	studentId := c.Query("StudentID")
+
+	if studentId == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "StudentID is required",
+		})
+	}
+
+	var diaryDates []time.Time
+
+	result := database.DB.Model(&models.Diary{}).
+		Where("student_id = ?", studentId).
+		Pluck("diary_date", &diaryDates)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": result.Error.Error(),
+		})
+	}
+
+	if len(diaryDates) == 0 {
+		return c.JSON(fiber.Map{
+			"message": "no diary dates found",
+			"data":    []time.Time{},
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "ok",
+		"data":    diaryDates,
+	})
+}
