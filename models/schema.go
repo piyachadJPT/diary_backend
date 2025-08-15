@@ -10,6 +10,8 @@ type User struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement"`
 	Name      *string   `gorm:"size:255"`
 	Email     string    `gorm:"size:255;unique;not null"`
+	Password  *string   `gorm:"size:255"`
+	Approved  bool      `gorm:"not null;default:true"`
 	Image     *string   `gorm:"type:longtext"`
 	Role      string    `gorm:"type:enum('student','advisor');not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`

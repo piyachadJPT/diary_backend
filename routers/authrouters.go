@@ -8,4 +8,5 @@ import (
 
 func AuthRouter(app *fiber.App) {
 	app.Post("/api/auth/microsoft", controllers.HandleMicrosoftLogin)
+	app.Post("/api/auth", controllers.LoginHandler)
 }
