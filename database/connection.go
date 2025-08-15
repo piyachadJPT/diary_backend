@@ -42,6 +42,7 @@ func autoMigrate() {
 		&models.Diary{},
 		&models.Comment{},
 		&models.Attachment{},
+		&models.Notification{},
 	)
 
 	if err != nil {

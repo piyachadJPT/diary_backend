@@ -62,3 +62,19 @@ type Comment struct {
 	Diary  Diary `gorm:"foreignKey:DiaryID;constraint:OnDelete:CASCADE"`
 	Author User  `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE"`
 }
+
+type Notification struct {
+	ID        uint           `gorm:"primaryKey;autoIncrement"`
+	UserID    uint           `gorm:"not null;index"`
+	DiaryID   *uint          `gorm:"index"`
+	Type      string         `gorm:"size:50;not null"`
+	Title     string         `gorm:"size:255;not null"`
+	Message   string         `gorm:"type:text;not null"`
+	Data      datatypes.JSON `gorm:"type:json"`
+	IsRead    bool           `gorm:"default:false"`
+	CreatedAt time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
+
+	User  User   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Diary *Diary `gorm:"foreignKey:DiaryID;constraint:OnDelete:CASCADE"`
+}
