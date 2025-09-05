@@ -3,18 +3,31 @@ package controllers
 import (
 	"gofiber-auth/database"
 	"gofiber-auth/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
+type User struct {
+	ID        uint      `json:"ID"`
+	Name      string    `json:"Name"`
+	Email     string    `json:"Email"`
+	Password  string    `json:"-"`
+	Approved  bool      `json:"Approved"`
+	Image     string    `json:"Image"`
+	Role      string    `json:"Role"`
+	CreatedAt time.Time `json:"CreatedAt"`
+}
+
 func GetAllStudents(c *fiber.Ctx) error {
 	var students []models.User
-
-	result := database.DB.Find(&students)
+	result := database.DB.Where("role = ?", "student").Find(&students)
 	if result.Error != nil {
-		c.Status(404)
-		return c.SendString("students not found")
+		return c.Status(fiber.StatusInternalServerError).SendString("Failed to query students")
+	}
+	if result.RowsAffected == 0 {
+		return c.Status(fiber.StatusNotFound).SendString("No students found")
 	}
 
 	return c.JSON(students)

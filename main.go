@@ -68,13 +68,12 @@ func main() {
 	routers.StudentAdvisorRouter(app)
 	routers.MoodRouter(app)
 	routers.NotificationRouters(app)
+	routers.GroupRouter(app)
+	routers.AdminRouter(app)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = os.Getenv("SERVER_PORT")
-	}
-	if port == "" {
-		port = "6001"
 	}
 
 	log.Printf("Starting server at :%s\n", port)

@@ -7,10 +7,7 @@ import (
 )
 
 func StudentRouter(app *fiber.App) {
-	studentRouter := app.Group("")
-
-	studentRouter.Get("/api/students", controllers.GetAllStudents)
-	studentRouter.Get("/api/student", controllers.GetStudentById)
-	// studentRouter.Get("/api/student", controllers.GetStudentByAdvisor)
-	studentRouter.Post("/api/student", controllers.CreateStudent)
+	app.Get("/api/students", controllers.GetAllStudents)
+	app.Get("/api/student", controllers.GetStudentById)
+	app.Post("/api/student", controllers.CreateStudent)
 }

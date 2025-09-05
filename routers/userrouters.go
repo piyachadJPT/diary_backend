@@ -13,5 +13,6 @@ func UserRouter(app *fiber.App) {
 	app.Post("/api/user", controllers.CreateUser)
 	app.Get("/api/profile", controllers.AuthMiddleware, controllers.GetProfileHandler)
 	app.Patch("/api/user/:id", controllers.PatchApproved)
+	app.Delete("/api/user/:id", controllers.DeleteApprover)
 	app.Post("/api/user/register", controllers.RegisterHandler)
 }

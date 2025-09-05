@@ -7,8 +7,6 @@ import (
 )
 
 func StudentAdvisorRouter(app *fiber.App) {
-	studentAdvisorRouter := app.Group("")
-
-	studentAdvisorRouter.Get("/api/studentAdvisor", controllers.GetStudentByAdvisor)
-	studentAdvisorRouter.Delete("/api/studentAdvisor", controllers.DeleteStudentAdvisor)
+	app.Get("/api/studentAdvisor", controllers.GetStudentByAdvisor)
+	app.Delete("/api/studentAdvisor", controllers.DeleteStudentAdvisor)
 }

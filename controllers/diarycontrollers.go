@@ -46,80 +46,6 @@ func GetDiaryByDate(c *fiber.Ctx) error {
 	})
 }
 
-// func CreateNewDiary(c *fiber.Ctx) error {
-// 	var diary models.Diary
-
-// 	if err := c.BodyParser(&diary); err != nil {
-// 		return c.Status(400).JSON(fiber.Map{
-// 			"error":   "Cannot parse JSON",
-// 			"details": err.Error(),
-// 		})
-// 	}
-
-// 	if diary.StudentID == 0 {
-// 		return c.Status(400).JSON(fiber.Map{
-// 			"error": "StudentID is required",
-// 		})
-// 	}
-
-// 	if diary.ContentHTML == "" {
-// 		return c.Status(400).JSON(fiber.Map{
-// 			"error": "ContentHTML is required",
-// 		})
-// 	}
-
-// 	if diary.IsShared == "" {
-// 		diary.IsShared = "everyone"
-// 	}
-
-// 	if diary.Status == "" {
-// 		diary.Status = "neutral"
-// 	}
-
-// 	if diary.DiaryDate.IsZero() {
-// 		diary.DiaryDate = time.Now()
-// 	}
-
-// 	if err := database.DB.Create(&diary).Error; err != nil {
-// 		return c.Status(500).JSON(fiber.Map{
-// 			"error":   "Failed to create diary",
-// 			"details": err.Error(),
-// 		})
-// 	}
-
-// 	var advisors []models.StudentAdvisor
-// 	database.DB.Preload("Advisor").Where("student_id = ?", diary.StudentID).Find(&advisors)
-
-// 	for _, sa := range advisors {
-// 		notif := models.Notification{
-// 			UserID:  sa.AdvisorID,
-// 			DiaryID: &diary.ID,
-// 			Type:    "new_diary",
-// 			Title:   "นิสิตเพิ่มไดอารี่ใหม่",
-// 			Message: fmt.Sprintf("นิสิต %d เพิ่มข้อมูลใหม่", diary.StudentID),
-// 			IsRead:  false,
-// 		}
-
-// 		if err := database.DB.Create(&notif).Error; err != nil {
-// 			fmt.Printf("Failed to create notification: %v\n", err)
-// 			continue
-// 		}
-
-// 		if ch, ok := advisorChannels[sa.AdvisorID]; ok {
-// 			select {
-// 			case ch <- notif:
-// 			default:
-// 				fmt.Printf("Failed to send notification to advisor %d: channel full or closed\n", sa.AdvisorID)
-// 			}
-// 		}
-// 	}
-
-// 	return c.Status(201).JSON(fiber.Map{
-// 		"message": "Created diary successfully",
-// 		"data":    diary,
-// 	})
-// }
-
 func CreateNewDiary(c *fiber.Ctx) error {
 	var diary models.Diary
 
@@ -177,7 +103,7 @@ func CreateNewDiary(c *fiber.Ctx) error {
 		var student models.User
 		database.DB.First(&student, diary.StudentID)
 
-		// สร้าง Data สำหรับ notification
+		// สร้างข้อมูลสำหรับ notification
 		notificationData := map[string]interface{}{
 			"diary_date": diary.DiaryDate.Format("2006-01-02"),
 			"student_id": diary.StudentID,

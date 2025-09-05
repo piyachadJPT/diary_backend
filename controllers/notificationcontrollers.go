@@ -313,7 +313,6 @@ func MarkNotificationAsRead(c *fiber.Ctx) error {
 		})
 	}
 
-	// ถ้าอ่านแล้วก็ไม่ต้องอัพเดท
 	if notification.IsRead {
 		return c.JSON(fiber.Map{
 			"message": "Notification already marked as read",
@@ -353,6 +352,7 @@ func MarkNotificationAsRead(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Notification marked as read",
+		"ok":      true,
 		"data":    notification,
 	})
 }

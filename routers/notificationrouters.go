@@ -30,8 +30,8 @@ func NotificationRouters(app *fiber.App) {
 	notificationRouters.Get("/all", controllers.GetAllNotifications)
 	notificationRouters.Delete("/:id", controllers.DeleteNotification)
 
-	notificationRouters.Put("/:id/read", controllers.MarkNotificationAsRead)
-	notificationRouters.Put("/read-all", controllers.MarkAllNotificationsAsRead)
+	notificationRouters.Patch("/:id/read", controllers.MarkNotificationAsRead)
+	notificationRouters.Patch("/read-all", controllers.MarkAllNotificationsAsRead)
 	notificationRouters.Get("/count", controllers.GetNotificationCount)
 
 	notificationRouters.Get("/connections", controllers.GetActiveConnections)

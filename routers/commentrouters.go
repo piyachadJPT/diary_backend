@@ -7,10 +7,7 @@ import (
 )
 
 func CommentRouter(app *fiber.App) {
-	commentRouter := app.Group("")
-
-	commentRouter.Post("/api/comment", controllers.CreateNewComment)
-	commentRouter.Get("/api/comment", controllers.GetCommentByDiaryId)
-	commentRouter.Delete("/api/comment/:id", controllers.DeleteComment)
-
+	app.Post("/api/comment", controllers.CreateNewComment)
+	app.Get("/api/comment", controllers.GetCommentByDiaryId)
+	app.Delete("/api/comment/:id", controllers.DeleteComment)
 }

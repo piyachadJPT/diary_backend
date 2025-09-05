@@ -88,7 +88,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	var user models.User
 	if err := database.DB.Where("email = ? AND approved = ?", input.Email, true).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "บัญชีของคุณยังไม่ได้รับการอนุมัติ",
+			"error": "Your account has not been approved yet",
 		})
 	}
 
@@ -101,7 +101,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
 		"email":   user.Email,
-		"role":    user.Role, // เพิ่ม role
+		"role":    user.Role,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	}
 

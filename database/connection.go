@@ -34,7 +34,7 @@ func Connect() {
 }
 
 func autoMigrate() {
-	// DB.Migrator().DropTable(&models.Diary{})
+	// DB.Migrator().DropTable(&models.....{})
 
 	err := DB.AutoMigrate(
 		&models.User{},
@@ -43,6 +43,8 @@ func autoMigrate() {
 		&models.Comment{},
 		&models.Attachment{},
 		&models.Notification{},
+		&models.Group{},
+		&models.StudentGroup{},
 	)
 
 	if err != nil {

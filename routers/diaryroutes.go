@@ -7,12 +7,10 @@ import (
 )
 
 func DiaryRouter(app *fiber.App) {
-	diaryRouter := app.Group("")
-
-	diaryRouter.Post("/api/diary", controllers.CreateNewDiary)
-	diaryRouter.Get("/api/diary/", controllers.GetDiaryByDate)
-	diaryRouter.Get("/api/diary/by-student", controllers.GetDiaryDateByStudentId)
-	diaryRouter.Patch("/api/diary/:id", controllers.PatchDiary)
-	diaryRouter.Put("/api/diary/:id", controllers.UpdateDiary)
-	diaryRouter.Delete("/api/diary/:id", controllers.DeleteDiary)
+	app.Post("/api/diary", controllers.CreateNewDiary)
+	app.Get("/api/diary/", controllers.GetDiaryByDate)
+	app.Get("/api/diary/by-student", controllers.GetDiaryDateByStudentId)
+	app.Patch("/api/diary/:id", controllers.PatchDiary)
+	app.Put("/api/diary/:id", controllers.UpdateDiary)
+	app.Delete("/api/diary/:id", controllers.DeleteDiary)
 }

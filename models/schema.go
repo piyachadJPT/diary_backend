@@ -13,7 +13,7 @@ type User struct {
 	Password  *string   `gorm:"size:255"`
 	Approved  bool      `gorm:"not null;default:true"`
 	Image     *string   `gorm:"type:longtext"`
-	Role      string    `gorm:"type:enum('student','advisor');not null"`
+	Role      string    `gorm:"type:varchar(20);not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
@@ -24,6 +24,27 @@ type StudentAdvisor struct {
 
 	Advisor User `gorm:"foreignKey:AdvisorID;references:ID;constraint:OnDelete:CASCADE"`
 	Student User `gorm:"foreignKey:StudentID;references:ID;constraint:OnDelete:CASCADE"`
+}
+
+type Group struct {
+	ID          uint      `gorm:"primaryKey;autoIncrement"`
+	Name        string    `gorm:"size:255;not null"`
+	Description *string   `gorm:"type:text"`
+	AdvisorID   uint      `gorm:"not null;index"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+
+	Advisor User `gorm:"foreignKey:AdvisorID;references:ID;constraint:OnDelete:CASCADE"`
+}
+
+type StudentGroup struct {
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	StudentID uint      `gorm:"not null;index"`
+	GroupID   uint      `gorm:"not null;index"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+
+	Student User  `gorm:"foreignKey:StudentID;references:ID;constraint:OnDelete:CASCADE"`
+	Group   Group `gorm:"foreignKey:GroupID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 type Diary struct {

@@ -7,7 +7,5 @@ import (
 )
 
 func MoodRouter(app *fiber.App) {
-	moodRouter := app.Group("")
-
-	moodRouter.Get("/api/mood", controllers.GetMoodByAdvisor)
+	app.Get("/api/mood", controllers.GetMoodByAdvisor)
 }
