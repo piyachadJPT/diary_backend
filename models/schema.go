@@ -101,3 +101,14 @@ type Notification struct {
 	User  User   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	Diary *Diary `gorm:"foreignKey:DiaryID;constraint:OnDelete:CASCADE"`
 }
+
+type AdvisorNotification struct {
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	AdvisorID uint      `gorm:"not null;index"`
+	StudentID uint      `gorm:"not null;index"`
+	Message   string    `gorm:"type:text;not null"`
+	IsRead    bool      `gorm:"default:false"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+
+	Student User `gorm:"foreignKey:StudentID;references:ID;constraint:OnDelete:CASCADE"`
+}

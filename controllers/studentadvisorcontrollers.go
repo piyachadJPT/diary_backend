@@ -85,3 +85,96 @@ func DeleteStudentAdvisor(c *fiber.Ctx) error {
 		"message": "Advisor deleted successfully",
 	})
 }
+
+func CreateStudentAdvisor(c *fiber.Ctx) error {
+	var body struct {
+		StudentID uint `json:"student_id"`
+		AdvisorID uint `json:"advisor_id"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	// เช็คว่าคำขอซ้ำอยู่แล้วหรือไม่
+	var existing models.AdvisorNotification
+	err := database.DB.Where("student_id = ? AND advisor_id = ?", body.StudentID, body.AdvisorID).First(&existing).Error
+	if err == nil {
+		return c.Status(400).JSON(fiber.Map{
+			"ok":      false,
+			"message": "คุณได้ส่งคำขออาจารย์ท่านนี้แล้ว",
+		})
+	}
+
+	// สร้างคำขอในตาราง AdvisorNotification
+	notification := models.AdvisorNotification{
+		AdvisorID: body.AdvisorID,
+		StudentID: body.StudentID,
+		Message:   "นิสิตส่งคำร้องขอเป็นที่ปรึกษา",
+	}
+
+	if err := database.DB.Create(&notification).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"ok": true,
+	})
+}
+func ApproveAdvisorRequest(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var notif models.AdvisorNotification
+	if err := database.DB.First(&notif, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Request not found"})
+	}
+
+	// เพิ่ม StudentAdvisor
+	studentAdvisor := models.StudentAdvisor{
+		StudentID: notif.StudentID,
+		AdvisorID: notif.AdvisorID,
+	}
+	if err := database.DB.Create(&studentAdvisor).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	if err := database.DB.Delete(&notif).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"ok": true, "message": "อนุมัติคำขอเรียบร้อย"})
+}
+
+func UnApproveAdvisorRequest(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var notif models.AdvisorNotification
+
+	if err := database.DB.First(&notif, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Request not found"})
+	}
+
+	if err := database.DB.Delete(&notif).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+
+	}
+
+	return c.JSON(fiber.Map{"ok": true})
+}
+
+func GetAdvisorRequests(c *fiber.Ctx) error {
+	advisorID := c.Query("advisor_id")
+	if advisorID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "advisor_id required"})
+	}
+
+	var requests []models.AdvisorNotification
+	if err := database.DB.
+		Preload("Student").
+		Where("advisor_id = ? AND is_read = ?", advisorID, false).
+		Order("created_at desc").
+		Find(&requests).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"data": requests})
+}

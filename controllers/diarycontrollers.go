@@ -103,7 +103,6 @@ func CreateNewDiary(c *fiber.Ctx) error {
 		var student models.User
 		database.DB.First(&student, diary.StudentID)
 
-		// สร้างข้อมูลสำหรับ notification
 		notificationData := map[string]interface{}{
 			"diary_date": diary.DiaryDate.Format("2006-01-02"),
 			"student_id": diary.StudentID,

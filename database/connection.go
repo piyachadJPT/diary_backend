@@ -45,6 +45,7 @@ func autoMigrate() {
 		&models.Notification{},
 		&models.Group{},
 		&models.StudentGroup{},
+		&models.AdvisorNotification{},
 	)
 
 	if err != nil {

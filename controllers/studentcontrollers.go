@@ -98,7 +98,6 @@ func CreateStudent(c *fiber.Ctx) error {
 		}
 	}
 
-	// ตรวจสอบว่ามีนิสิตอยู่แล้วไหม
 	var existingRelation models.StudentAdvisor
 	if err := database.DB.Where("advisor_id = ? AND student_id = ?", advisor.ID, student.ID).
 		First(&existingRelation).Error; err == nil {
