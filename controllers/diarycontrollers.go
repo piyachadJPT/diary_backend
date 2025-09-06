@@ -77,10 +77,10 @@ func CreateNewDiary(c *fiber.Ctx) error {
 	}
 
 	if diary.DiaryDate.IsZero() {
-		diary.DiaryDate = time.Now()
+		loc, _ := time.LoadLocation("Asia/Bangkok")
+		diary.DiaryDate = time.Now().In(loc)
 	}
 
-	// บันทึก Diary ในฐานข้อมูล
 	if err := database.DB.Create(&diary).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   "Failed to create diary",
@@ -88,7 +88,6 @@ func CreateNewDiary(c *fiber.Ctx) error {
 		})
 	}
 
-	//  สร้าง Notification สำหรับอาจารย์ที่ปรึกษา
 	var advisors []models.StudentAdvisor
 	result := database.DB.Preload("Advisor").Where("student_id = ?", diary.StudentID).Find(&advisors)
 
@@ -103,8 +102,11 @@ func CreateNewDiary(c *fiber.Ctx) error {
 		var student models.User
 		database.DB.First(&student, diary.StudentID)
 
+		loc, _ := time.LoadLocation("Asia/Bangkok")
+		diaryDateInBangkok := diary.DiaryDate.In(loc)
+
 		notificationData := map[string]interface{}{
-			"diary_date": diary.DiaryDate.Format("2006-01-02"),
+			"diary_date": diaryDateInBangkok.Format("2006-01-02"),
 			"student_id": diary.StudentID,
 		}
 
@@ -137,7 +139,6 @@ func CreateNewDiary(c *fiber.Ctx) error {
 			default:
 			}
 		}
-
 	}
 
 	return c.Status(201).JSON(fiber.Map{

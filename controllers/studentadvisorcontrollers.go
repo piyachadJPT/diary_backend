@@ -106,6 +106,15 @@ func CreateStudentAdvisor(c *fiber.Ctx) error {
 		})
 	}
 
+	var studentAdvisor models.StudentAdvisor
+	err = database.DB.Where("student_id = ? AND advisor_id = ?", body.StudentID, body.AdvisorID).First(&studentAdvisor).Error
+	if err == nil {
+		return c.Status(400).JSON(fiber.Map{
+			"ok":      false,
+			"message": "คุณเป็นนิสิตในการดูแลอาจารย์ท่านนี้แล้ว",
+		})
+	}
+
 	// สร้างคำขอในตาราง AdvisorNotification
 	notification := models.AdvisorNotification{
 		AdvisorID: body.AdvisorID,
@@ -121,6 +130,7 @@ func CreateStudentAdvisor(c *fiber.Ctx) error {
 		"ok": true,
 	})
 }
+
 func ApproveAdvisorRequest(c *fiber.Ctx) error {
 	id := c.Params("id")
 

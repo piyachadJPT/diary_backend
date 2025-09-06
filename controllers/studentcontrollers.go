@@ -51,14 +51,12 @@ func CreateStudent(c *fiber.Ctx) error {
 		Email     string `json:"email"`
 		AdvisorID uint   `json:"advisor_id"`
 	}
-
 	var input Input
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid JSON body",
 		})
 	}
-
 	if input.Email == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Email is required",
@@ -77,32 +75,32 @@ func CreateStudent(c *fiber.Ctx) error {
 		})
 	}
 
+	// ตรวจสอบ email นี้มีอยู่แล้วไหม
 	var student models.User
-	err := database.DB.Where("email = ?", input.Email).First(&student).Error
-
-	if err != nil {
+	if err := database.DB.Where("email = ?", input.Email).First(&student).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			student = models.User{
-				Email: input.Email,
-				Role:  "student",
-			}
-			if err := database.DB.Create(&student).Error; err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"message": "Failed to create student user",
-				})
-			}
-		} else {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": "Database error when checking for existing email",
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "ไม่พบนิสิตที่ใช้อีเมลนี้",
 			})
 		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Database error when checking for user account",
+		})
 	}
 
+	// ตรวจสอบว่า student มี role เป็น student"หรือไม่
+	if student.Role != "student" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "ผู้ใช้บัญชีนี้ไม่ใช่นิสิต",
+		})
+	}
+
+	// ตรวจสอบว่ามีความสัมพันธ์อยู่ไหม
 	var existingRelation models.StudentAdvisor
 	if err := database.DB.Where("advisor_id = ? AND student_id = ?", advisor.ID, student.ID).
 		First(&existingRelation).Error; err == nil {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"message": "คุณได้เพิ่มนิสิตคนนี้ให้เป็นที่ปรึกษาแล้ว",
+			"message": "คุณได้เพิ่มนิสิตคนนี้แล้ว",
 		})
 	} else if err != gorm.ErrRecordNotFound {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -110,6 +108,7 @@ func CreateStudent(c *fiber.Ctx) error {
 		})
 	}
 
+	// สร้างความสัมพันธ์ student กับ advisor
 	studentAdvisor := models.StudentAdvisor{
 		AdvisorID: advisor.ID,
 		StudentID: student.ID,
@@ -121,7 +120,7 @@ func CreateStudent(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Student and advisor relationship created successfully",
+		"ok":      true,
 		"user_id": student.ID,
 	})
 }
